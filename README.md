@@ -1,0 +1,55 @@
+# UR5 RUL-Aware RRT*: Custom OMPL Planner in MoveIt 1 / UR5 寿命感知 RRT*：在 MoveIt 1 中集成自定义 OMPL 规划器
+
+**中文。**本仓库整理了 UR5 三场景寿命感知运动规划实验：规划器与优化目标的 C++ 源码、MoveIt 注册工具、UR5 配置、批量实验脚本，以及 54 次运行的数据。教程以实际代码路径为准，说明从环境搭建到结果分析的操作。
+
+**English.** This repository organizes a three-scenario UR5 experiment in lifetime-aware motion planning: C++ planners and objectives, MoveIt registration tooling, UR5 configuration, batch experiment code, and data from 54 runs. The guides follow the implemented code path from environment setup through result analysis.
+
+## Start here / 阅读顺序
+
+| Guide / 教程 | Scope / 内容 |
+| --- | --- |
+| [1. Environment and planner registration / 环境与规划器注册](docs/01_环境与规划器注册.md) | Pinned source revisions, MoveIt integration, catkin build / 源码版本、MoveIt 接线与构建 |
+| [2. Experiments and results / 实验运行与结果](docs/02_实验运行与结果.md) | FHS/HDS/LDS execution, outputs, result tables / 三场景运行、输出与汇总 |
+| [3. Implementation and algorithm / 源码与算法](docs/03_源码与算法.md) | Code map, data flow, comparison with standard RRT* / 代码地图、数据流与算法对比 |
+
+## Repository layout / 仓库结构
+
+| Path / 路径 | Contents / 内容 |
+| --- | --- |
+| `archive/local_history_20250930/` | Unmodified historical Python/C++ source snapshots and SHA-256 manifest / 原始源码快照与校验清单 |
+| `planner/src/ompl/` | Two planners and two optimization objectives, each with headers and implementations / 两个规划器和两个优化目标的头文件与实现 |
+| `tools/` | Source revision manifest, MoveIt registration, package validation / 依赖版本、注册工具与包检查 |
+| `ros/ur5_moveit_config/` | UR5 MoveIt configuration, including custom planner IDs and fake execution / UR5 规划配置与仿真启动文件 |
+| `experiment/run_experiment.py` | Portable three-scenario batch runner / 三场景批量运行脚本 |
+| `data/joint_usage_1/` | 54 runs, paired usage/loss files, and saved summaries / 原始运行数据及汇总 |
+| `analysis/` | Data checks, summary table, and plotting utility / 数据检查、统计表与绘图工具 |
+
+## Experiment design / 实验设计
+
+| Scenario / 场景 | Initial joint RUL / 六关节初始 RUL | Task limit / 任务上限 |
+| --- | --- | ---: |
+| FHS — Full Health / 全健康 | `[1000,1000,1000,1000,1000,1000]` | 80 |
+| HDS — Heterogeneous Degradation / 非均匀退化 | `[500,800,400,600,1000,700]` | 80 |
+| LDS — Local Degradation / 局部退化 | `[100,1000,1000,1000,1000,1000]` | 500; stop at `min_rul=10` / 达阈值停止 |
+
+Each scenario uses degradation shape `p ∈ {0.8, 1.0, 1.5}`. Each shape is run three times with `RULRRTstar` and three times with `BaseRRTstar`, for **54 runs**. The runner uses `alpha=lambda=rulmin=1`, a five-second planning limit, and one planning attempt per request. `EPSILON_INIT=1e-9` is rounded to `0.0` when the 16-column parameter CSV is written. / 每个场景有三种退化形状，每种形状下两个规划器各运行三次，共 **54 次**。其余参数及 CSV 舍入规则见[实验教程](docs/02_实验运行与结果.md)。
+
+The experiment uses UR5 fake execution. It plans pickup and place paths and derives joint usage from those paths; `move_group.execute()` remains commented in the original experiment. / 实验采用 UR5 仿真执行配置，对取放路径进行规划并据此计算关节用量；原实验脚本未调用真实机器人执行接口。
+
+## Inspect the packaged results / 检查包内数据
+
+From the repository root / 在仓库根目录运行：
+
+```bash
+python3 tools/check_package.py
+python3 analysis/experiment_table.py --check-stored-summary
+python3 analysis/check_gamma_trace.py  # requires NumPy / 需要 NumPy
+```
+
+The first command checks source hashes and dataset completeness; the second produces 18 planner/shape/scenario summary rows; the third checks the initial gamma values in all 54 runs. / 三条命令分别检查源码与数据完整性、输出 18 组统计结果、核对 54 次运行的初始 gamma。
+
+## Integration model / 集成方式
+
+The planners implement OMPL APIs but also publish ROS topics. Their four `.cpp` files are therefore compiled into MoveIt 1's `moveit_ompl_interface`. `planning_context_manager.cpp` registers `geometric::RULRRTstar` and `geometric::BaseRRTstar`; `ompl_planning.yaml` exposes both IDs to the UR5 `manipulator` group. / 规划器遵循 OMPL 接口，同时发布 ROS 话题，因此源码编入 MoveIt 的 OMPL 接口库，由 MoveIt 注册规划器 ID，再在 UR5 的 YAML 中提供给 `manipulator` 规划组。
+
+The project targets the ROS Melodic / MoveIt 1 / OMPL 1.4.2 API generation. Third-party source commits are listed in `tools/source-revisions.json`. For API background, see the official [OMPL planner guide](https://ompl.kavrakilab.org/newPlanner.html) and [MoveIt OMPL configuration guide](https://moveit.github.io/moveit_tutorials/doc/ompl_interface/ompl_interface_tutorial.html). / 第三方源码版本已在清单中固定；上述官方文档可用于查阅接口约定。

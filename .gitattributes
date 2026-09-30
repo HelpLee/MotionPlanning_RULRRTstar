@@ -1,0 +1,6 @@
+* text=auto eol=lf
+
+# Keep original source snapshots and experiment CSVs byte-for-byte intact.
+# 保持原始源码快照和实验数据的字节内容不变。
+archive/local_history_20250930/** -text
+data/joint_usage_1/** -text

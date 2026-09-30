@@ -1,0 +1,7 @@
+method,p,n_runs,rul_sum_mean,rul_sum_std
+base,0.8,3,4850.72,22.03
+base,1,3,4637.83,30.97
+base,1.5,3,4065.12,64.56
+rul-aware,0.8,3,4751.25,43.64
+rul-aware,1,3,4493.89,30.16
+rul-aware,1.5,3,3877.63,84.04

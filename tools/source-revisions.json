@@ -1,0 +1,10 @@
+{
+  "moveit": {"url": "https://github.com/moveit/moveit.git", "commit": "1fbb2c4c555fe59cb316fea184760468aa702d66"},
+  "moveit_msgs": {"url": "https://github.com/moveit/moveit_msgs.git", "commit": "42bf621ebca4d73592ed59dd0235540c9858e06c"},
+  "geometric_shapes": {"url": "https://github.com/moveit/geometric_shapes.git", "commit": "1675760af4c6f98b2ff4e111b5f797ebfb394cb1"},
+  "srdfdom": {"url": "https://github.com/moveit/srdfdom", "commit": "105bd5f21ff4b6946a173b9e4a8bbc00dfde3b50"},
+  "moveit_resources": {"url": "https://github.com/moveit/moveit_resources.git", "commit": "acf0e01603a7a351f506b726950e2b7ca1e6a116"},
+  "moveit_visual_tools": {"url": "https://github.com/moveit/moveit_visual_tools.git", "commit": "9b966d7ae0e17144975d6df2093b90302ae09c14"},
+  "rviz_visual_tools": {"url": "https://github.com/PickNikRobotics/rviz_visual_tools", "commit": "1a1a4d153acdb465606d4c058cb91dcffdd1eb28"},
+  "universal_robot": {"url": "https://github.com/ros-industrial/universal_robot.git", "commit": "09ba93f5bd4df876465573617ed8bdb76ea4bf01"}
+}

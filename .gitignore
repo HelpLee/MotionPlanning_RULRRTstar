@@ -1,0 +1,10 @@
+results/
+build/
+devel/
+logs/
+__pycache__/
+*.pyc
+*.o
+*.so
+.vscode/
+.idea/
