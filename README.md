@@ -44,7 +44,7 @@ The C++ sources are an example to adapt when designing another planner. The supp
 | --- | --- | --- |
 | Health input / 健康参数 | Shared 16-column CSV: 6 RUL, 6 gamma, `lambda`, `alpha`, `rulmin`, `epsilon` | [`run_experiment.py`](experiment/run_experiment.py), [`RULRRTstar.cpp`](planner/src/ompl/geometric/planners/rrt/src/RULRRTstar.cpp) |
 | Neighbor metric / 近邻度量 | Joint displacement weighted by RUL and gamma; denominator uses `max(RUL_j, rulmin)` | [`RULRRTstar.cpp`](planner/src/ompl/geometric/planners/rrt/src/RULRRTstar.cpp) |
-| Edge objective / 路径代价 | Default `fixed1000` mode uses `Σ (alpha + lambda·gamma_j) · |Δq_j| / (max(RUL_j/1000, 0.05) + epsilon)` | [`RULAwareOptimizationObjective.cpp`](planner/src/ompl/base/objectives/src/RULAwareOptimizationObjective.cpp) |
+| Edge objective / 路径代价 | Default `fixed1000` mode uses `Σ (alpha + lambda·gamma_j) · abs(Δq_j) / (max(RUL_j/1000, 0.05) + epsilon)` | [`RULAwareOptimizationObjective.cpp`](planner/src/ompl/base/objectives/src/RULAwareOptimizationObjective.cpp) |
 | Comparison / 对照 | Separate `BaseRRTstar` with path-length objective | [`BaseRRTstar.cpp`](planner/src/ompl/geometric/planners/rrt/src/BaseRRTstar.cpp) |
 
 The neighbor metric and objective use **different RUL normalization rules** in this recorded implementation. See the [algorithm walkthrough](docs/03_源码与算法.md) before changing either formula or interpreting the experiments. / 当前版本的近邻度量与目标函数采用不同的 RUL 归一化规则；修改算法或解释结果前请阅读[源码与算法说明](docs/03_源码与算法.md)。
