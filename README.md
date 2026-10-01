@@ -1,36 +1,73 @@
-# RUL-aware RRT* for UR5 motion planning
+<div align="center">
 
-**Health-aware path planning in OMPL and MoveIt 1, with a reproducible 54-run UR5 comparison.**
+# Custom Planners in OMPL & MoveIt
 
-**UR5 寿命感知运动规划：OMPL / MoveIt 1 自定义规划器与 54 次实验数据。**
+### From your own RRT* class to a reproducible RUL-aware planning study
 
-[Quick start](#quick-start--快速开始) · [Results](#results--实验结果) · [Method](docs/03_源码与算法.md) · [Reproduce](docs/01_环境与规划器注册.md) · [Data](data/joint_usage_1/) · [Citation](#citation--引用)
+**自定义规划器接入教程 · RUL-aware RRT* 设计 · 三场景实验与结果**
 
-This repository packages `RULRRTstar`, a remaining-useful-life (RUL) aware RRT* planner, and `BaseRRTstar` for comparison. It includes the OMPL/MoveIt integration, UR5 configuration, experiment runner, and raw data for three health scenarios. The experiment plans pickup and place paths with fake execution; it does **not** execute them on a physical robot. / 本仓库提供寿命感知规划器、基线规划器、UR5 配置及三种健康场景的原始数据；实验仅规划路径，不驱动真实机器人。
+[![OMPL](https://img.shields.io/badge/OMPL-1.4.2-1565a4?style=flat-square)](docs/01_环境与规划器注册.md)
+[![MoveIt](https://img.shields.io/badge/MoveIt-1%20%2F%20ROS%20Melodic-207668?style=flat-square)](docs/01_环境与规划器注册.md)
+[![Runs](https://img.shields.io/badge/experiment-54%20runs-7353a6?style=flat-square)](docs/02_实验运行与结果.md)
 
-![RUL-aware planning loop](docs/architecture.svg)
+**[Add a planner](#add-a-custom-planner--添加自定义规划器) · [RUL-aware design](#rul-aware-rrt-design--规划器设计) · [Results](#experiments-and-results--实验与结果) · [Reproduce](#reproduce--复现) · [Source map](#repository-map--代码导航)**
 
-**Highlights / 要点**
+</div>
 
-- Custom RUL-aware and baseline RRT* planners registered in MoveIt 1 / 两种自定义规划器接入 MoveIt 1。
-- Three health states × three degradation shapes × two planners × three repetitions = **54 runs** / 三种健康状态、三种退化形状、两种规划器、每组重复三次。
-- Packaged CSVs, verification scripts, and reproducible summary values / 附原始 CSV、校验脚本与可复核结果。
+This repository is a worked example of **designing a custom OMPL planner and making it selectable in MoveIt 1**. The concrete method is `RULRRTstar`: an RRT* variant that uses joint remaining useful life (RUL) in neighbor selection and path cost. `BaseRRTstar` provides a path-length comparison. The package includes the C++ implementation, a registration script, a reproducible integration guide, and 54 recorded runs across three joint-health scenarios. **UR5 is the experimental platform, not the subject or limit of the planner-design guide.**
 
-## Results / 实验结果
+本仓库首先回答“自己设计的规划器怎样接入 OMPL 与 MoveIt”；然后以 `RULRRTstar` 展示寿命感知的近邻度量与路径代价设计，并提供三场景实验、原始数据和结果核验。UR5 是这里使用的实验平台。
 
-In the locally degraded scenario (LDS), the mean completed tasks before the stopping condition were: / 在局部退化场景中，达到停止条件前平均完成任务数为：
+![Custom planner integration and experiment flow](docs/architecture.svg)
 
-| Degradation shape `p` | BaseRRTstar | RULRRTstar | Difference |
+> **Integration boundary / 接入边界：** These C++ planners implement OMPL APIs and publish ROS topics. They are therefore compiled into MoveIt's `moveit_ompl_interface`, registered under `geometric::RULRRTstar` and `geometric::BaseRRTstar`, then exposed through a MoveIt planner configuration. This is the integration pattern demonstrated here; the code is not a standalone `libompl` plugin. / 规划器遵循 OMPL API，同时使用 ROS 话题，因此本例将源码编入 MoveIt 的 OMPL 接口库，再通过规划器 ID 和 YAML 配置供 MoveIt 选择。
+
+## Add a custom planner / 添加自定义规划器
+
+The [step-by-step integration guide](docs/01_环境与规划器注册.md) shows the exact files, commands, source revisions, build steps, and registration checks. The transferable sequence is: / [接入教程](docs/01_环境与规划器注册.md) 给出具体文件、命令、依赖版本和验证方法；核心步骤如下：
+
+| Step | Where in this repository | What it does |
+| --- | --- | --- |
+| 1. Implement the planner / 实现规划器 | [`planner/src/ompl/geometric/planners/rrt/`](planner/src/ompl/geometric/planners/rrt/) | Define the OMPL planner class, `setup()` and `solve()` behavior / 定义规划类与搜索逻辑 |
+| 2. Define its objective / 定义代价 | [`planner/src/ompl/base/objectives/`](planner/src/ompl/base/objectives/) | Supply the RUL-aware edge cost and baseline path-length cost / 提供代价函数 |
+| 3. Compile into MoveIt / 编入 MoveIt | [`tools/register_moveit.py`](tools/register_moveit.py) | Add source files, include path and ROS dependency to `moveit_ompl_interface` / 修改编译接线 |
+| 4. Register planner IDs / 注册 ID | [`docs/01_环境与规划器注册.md`](docs/01_环境与规划器注册.md) | Add planner allocators in `planning_context_manager.cpp` / 在接口中实例化规划器 |
+| 5. Expose and verify / 配置与验证 | [`ros/ur5_moveit_config/config/ompl_planning.yaml`](ros/ur5_moveit_config/config/ompl_planning.yaml) | Make the IDs available to MoveIt's `manipulator` group, build and check / 声明 ID 并检查构建 |
+
+The C++ sources are an example to adapt when designing another planner. The supplied registration script targets the pinned MoveIt 1 source layout and checks expected code anchors before editing it. A different ROS/MoveIt generation or robot configuration needs its own integration changes. / C++ 源码可作为设计其它规划器的参考；自动接线脚本针对仓库固定的 MoveIt 1 版本，换版本或机器人配置时需相应调整。
+
+## RUL-aware RRT* design / 规划器设计
+
+`RULRRTstar` reads the six joint RUL values and degradation weights before a planning request. Relative to ordinary path-length RRT*, it changes the neighborhood metric and optimization objective, while retaining an RRT* search structure. The experiment runner measures planned-path joint usage, updates RUL and gamma, then provides the next health state. / 规划前读取关节 RUL 与退化权重；规划器改动近邻度量与优化目标；实验脚本根据规划路径更新下一任务的健康状态。
+
+| Component | Implemented behavior | Source |
+| --- | --- | --- |
+| Health input / 健康参数 | Shared 16-column CSV: 6 RUL, 6 gamma, `lambda`, `alpha`, `rulmin`, `epsilon` | [`run_experiment.py`](experiment/run_experiment.py), [`RULRRTstar.cpp`](planner/src/ompl/geometric/planners/rrt/src/RULRRTstar.cpp) |
+| Neighbor metric / 近邻度量 | Joint displacement weighted by RUL and gamma; denominator uses `max(RUL_j, rulmin)` | [`RULRRTstar.cpp`](planner/src/ompl/geometric/planners/rrt/src/RULRRTstar.cpp) |
+| Edge objective / 路径代价 | Default `fixed1000` mode uses `Σ (alpha + lambda·gamma_j) · |Δq_j| / (max(RUL_j/1000, 0.05) + epsilon)` | [`RULAwareOptimizationObjective.cpp`](planner/src/ompl/base/objectives/src/RULAwareOptimizationObjective.cpp) |
+| Comparison / 对照 | Separate `BaseRRTstar` with path-length objective | [`BaseRRTstar.cpp`](planner/src/ompl/geometric/planners/rrt/src/BaseRRTstar.cpp) |
+
+The neighbor metric and objective use **different RUL normalization rules** in this recorded implementation. See the [algorithm walkthrough](docs/03_源码与算法.md) before changing either formula or interpreting the experiments. / 当前版本的近邻度量与目标函数采用不同的 RUL 归一化规则；修改算法或解释结果前请阅读[源码与算法说明](docs/03_源码与算法.md)。
+
+## Experiments and results / 实验与结果
+
+The packaged study compares both planners in full health (FHS), heterogeneous degradation (HDS), and local degradation (LDS). Each scenario uses degradation shape `p ∈ {0.8, 1.0, 1.5}` and three repetitions per planner and shape: **3 × 3 × 2 × 3 = 54 runs**. UR5 pickup/place requests use MoveIt fake execution; the original runner plans paths but does not command a physical robot. / 三种健康状态、三种退化形状、两种规划器、每组重复三次。UR5 取放任务仅用于仿真规划，不驱动实体机器人。
+
+**LDS: mean completed tasks until the minimum-RUL stopping rule / 局部退化：达到最小 RUL 阈值前的平均任务数**
+
+| Shape `p` | BaseRRTstar | RULRRTstar | Difference |
 | ---: | ---: | ---: | ---: |
 | 0.8 | 18.67 | 27.67 | +9.00 |
 | 1.0 | 33.00 | 51.67 | +18.67 |
 | 1.5 | 73.67 | 111.67 | +38.00 |
 
-Each value is the mean of three stored runs. FHS and HDS groups reached their 80-task cap, so their task counts do not distinguish the planners. These are results of this packaged simulation setup, not evidence of physical robot lifetime extension. See the [experiment guide](docs/02_实验运行与结果.md) for settings and interpretation. / 每项为三次运行均值；FHS 和 HDS 均达到 80 个任务上限。以上是仿真实验结果，并非实体机器人寿命验证。
+Each value averages three stored runs. FHS and HDS groups all reached their 80-task cap, so task count alone cannot distinguish those planners; the [full summary](docs/02_实验运行与结果.md) also covers final joint RUL. These results describe this specific simulated study, not measured physical robot lifetime. / 每项为三次运行均值；FHS 和 HDS 均达到 80 个任务上限，需结合最终关节 RUL 分析。结果仅代表本仿真实验。
 
-## Quick start / 快速开始
+The original `BaseRRTstar` does not publish a fresh `/joint_loss`. Its saved loss CSV can contain a latched value from a previous RUL-aware run; compare task counts and RUL trajectories from the main and usage files instead. / 基线的 loss CSV 可能包含上次话题的残留值，请使用主 CSV 和 usage 文件比较。
 
-To inspect the published data on a Python 3 machine: / 无需 ROS 即可核对包内数据：
+## Reproduce / 复现
+
+**Check the packaged results on any Python 3 machine / 无需 ROS，先核对已发布数据：**
 
 ```bash
 git clone https://github.com/HelpLee/MotionPlanning_RULRRTstar.git
@@ -39,62 +76,24 @@ python3 tools/check_package.py
 python3 analysis/experiment_table.py --check-stored-summary
 ```
 
-These two checks use the Python standard library. For the gamma trace check, install NumPy and run `python3 analysis/check_gamma_trace.py`. The full planning experiment requires **Ubuntu, ROS Melodic, MoveIt 1, OMPL 1.4.2, and a catkin workspace**; follow [environment and planner registration](docs/01_环境与规划器注册.md), then [run the experiments](docs/02_实验运行与结果.md). Third-party source revisions are in [`tools/source-revisions.json`](tools/source-revisions.json). / 前两项仅需 Python 标准库；完整规划实验需按教程配置 ROS 与 MoveIt。
+Both commands use the Python standard library. To check all initial gamma traces, install NumPy and run `python3 analysis/check_gamma_trace.py`. / 前两条仅用标准库；检查 gamma 轨迹另需 NumPy。
 
-## Start here / 阅读顺序
+**Build and rerun planning / 构建并重跑规划：** Use Ubuntu 18.04, ROS Melodic, MoveIt 1 and OMPL 1.4.2. Follow [environment and planner registration](docs/01_环境与规划器注册.md), then [the experiment protocol](docs/02_实验运行与结果.md). Pinned third-party commits are in [`tools/source-revisions.json`](tools/source-revisions.json). The full experiment needs a ROS/catkin environment; the commands above validate the published package and data. / 完整实验需要 ROS/catkin 环境，依赖版本与命令见教程。
 
-| Guide / 教程 | Scope / 内容 |
+## Repository map / 代码导航
+
+| Path | Purpose |
 | --- | --- |
-| [1. Environment and planner registration / 环境与规划器注册](docs/01_环境与规划器注册.md) | Pinned source revisions, MoveIt integration, catkin build / 源码版本、MoveIt 接线与构建 |
-| [2. Experiments and results / 实验运行与结果](docs/02_实验运行与结果.md) | FHS/HDS/LDS execution, outputs, result tables / 三场景运行、输出与汇总 |
-| [3. Implementation and algorithm / 源码与算法](docs/03_源码与算法.md) | Code map, data flow, comparison with standard RRT* / 代码地图、数据流与算法对比 |
+| [`planner/src/ompl/`](planner/src/ompl/) | Custom planners and objectives / 规划器与目标函数 |
+| [`tools/register_moveit.py`](tools/register_moveit.py) | MoveIt 1 source registration / MoveIt 接线脚本 |
+| [`docs/01_环境与规划器注册.md`](docs/01_环境与规划器注册.md) | Build and integration tutorial / 环境与接入教程 |
+| [`docs/03_源码与算法.md`](docs/03_源码与算法.md) | Design and data flow / 算法与数据流 |
+| [`experiment/run_experiment.py`](experiment/run_experiment.py) | Scenario runner / 三场景实验入口 |
+| [`data/joint_usage_1/`](data/joint_usage_1/) · [`analysis/`](analysis/) | Raw runs, summaries, checks / 数据、汇总与核验 |
+| [`archive/local_history_20250930/`](archive/local_history_20250930/) | Original source snapshots and hashes / 历史源码与哈希 |
 
-## Repository layout / 仓库结构
+## Citation and reuse / 引用与复用
 
-| Path / 路径 | Contents / 内容 |
-| --- | --- |
-| `archive/local_history_20250930/` | Unmodified historical Python/C++ source snapshots and SHA-256 manifest / 原始源码快照与校验清单 |
-| `planner/src/ompl/` | Two planners and two optimization objectives, each with headers and implementations / 两个规划器和两个优化目标的头文件与实现 |
-| `tools/` | Source revision manifest, MoveIt registration, package validation / 依赖版本、注册工具与包检查 |
-| `ros/ur5_moveit_config/` | UR5 MoveIt configuration, including custom planner IDs and fake execution / UR5 规划配置与仿真启动文件 |
-| `experiment/run_experiment.py` | Portable three-scenario batch runner / 三场景批量运行脚本 |
-| `data/joint_usage_1/` | 54 runs, paired usage/loss files, and saved summaries / 原始运行数据及汇总 |
-| `analysis/` | Data checks, summary table, and plotting utility / 数据检查、统计表与绘图工具 |
+Use [`CITATION.cff`](CITATION.cff) to cite this software. A formal paper link will be added when available. No project-wide software license has been declared; check the licenses of third-party sources before reuse or redistribution. / 请用引用文件引用本软件；正式论文信息尚待补充。当前尚未声明覆盖整个仓库的许可。
 
-## Experiment design / 实验设计
-
-| Scenario / 场景 | Initial joint RUL / 六关节初始 RUL | Task limit / 任务上限 |
-| --- | --- | ---: |
-| FHS — Full Health / 全健康 | `[1000,1000,1000,1000,1000,1000]` | 80 |
-| HDS — Heterogeneous Degradation / 非均匀退化 | `[500,800,400,600,1000,700]` | 80 |
-| LDS — Local Degradation / 局部退化 | `[100,1000,1000,1000,1000,1000]` | 500; stop at `min_rul=10` / 达阈值停止 |
-
-Each scenario uses degradation shape `p ∈ {0.8, 1.0, 1.5}`. Each shape is run three times with `RULRRTstar` and three times with `BaseRRTstar`, for **54 runs**. The runner uses `alpha=lambda=rulmin=1`, a five-second planning limit, and one planning attempt per request. `EPSILON_INIT=1e-9` is rounded to `0.0` when the 16-column parameter CSV is written. / 每个场景有三种退化形状，每种形状下两个规划器各运行三次，共 **54 次**。其余参数及 CSV 舍入规则见[实验教程](docs/02_实验运行与结果.md)。
-
-The experiment uses UR5 fake execution. It plans pickup and place paths and derives joint usage from those paths; `move_group.execute()` remains commented in the original experiment. / 实验采用 UR5 仿真执行配置，对取放路径进行规划并据此计算关节用量；原实验脚本未调用真实机器人执行接口。
-
-## Inspect the packaged results / 检查包内数据
-
-From the repository root / 在仓库根目录运行：
-
-```bash
-python3 tools/check_package.py
-python3 analysis/experiment_table.py --check-stored-summary
-python3 analysis/check_gamma_trace.py  # requires NumPy / 需要 NumPy
-```
-
-The first command checks source hashes and dataset completeness; the second produces 18 planner/shape/scenario summary rows; the third checks the initial gamma values in all 54 runs. / 三条命令分别检查源码与数据完整性、输出 18 组统计结果、核对 54 次运行的初始 gamma。
-
-## Integration model / 集成方式
-
-The planners implement OMPL APIs but also publish ROS topics. Their four `.cpp` files are therefore compiled into MoveIt 1's `moveit_ompl_interface`. `planning_context_manager.cpp` registers `geometric::RULRRTstar` and `geometric::BaseRRTstar`; `ompl_planning.yaml` exposes both IDs to the UR5 `manipulator` group. / 规划器遵循 OMPL 接口，同时发布 ROS 话题，因此源码编入 MoveIt 的 OMPL 接口库，由 MoveIt 注册规划器 ID，再在 UR5 的 YAML 中提供给 `manipulator` 规划组。
-
-The project targets the ROS Melodic / MoveIt 1 / OMPL 1.4.2 API generation. Third-party source commits are listed in `tools/source-revisions.json`. For API background, see the official [OMPL planner guide](https://ompl.kavrakilab.org/newPlanner.html) and [MoveIt OMPL configuration guide](https://moveit.github.io/moveit_tutorials/doc/ompl_interface/ompl_interface_tutorial.html). / 第三方源码版本已在清单中固定；上述官方文档可用于查阅接口约定。
-
-## Citation / 引用
-
-If you use this repository, cite the software using [`CITATION.cff`](CITATION.cff). A paper link and formal publication citation will be added when available. / 使用本仓库时请引用软件；论文正式信息将在公开后补充。
-
-## License / 许可
-
-No project-wide software license has been declared yet. The repository also references third-party ROS, MoveIt, and OMPL sources; inspect their licenses before reuse or redistribution. / 目前尚未声明覆盖整个仓库的软件许可；复用或再分发前请检查第三方组件的许可。
+README structure adapted to this project from the [Papers with Code research-code README template](https://github.com/paperswithcode/releasing-research-code/blob/master/templates/README.md).

@@ -1,26 +1,44 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="310" viewBox="0 0 1200 310" role="img" aria-labelledby="title desc">
-  <title id="title">RUL-aware motion planning experiment flow</title>
-  <desc id="desc">Joint health parameters feed an RUL-aware RRT star planner, which plans UR5 paths. Joint usage updates the health state for the next task. A baseline planner supports comparison.</desc>
-  <rect width="1200" height="310" rx="18" fill="#f5f8fc"/>
-  <text x="40" y="47" font-family="Arial,sans-serif" font-size="23" font-weight="bold" fill="#14283f">RUL-aware motion planning loop</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="450" viewBox="0 0 1200 450" role="img" aria-labelledby="title desc">
+  <title id="title">Custom OMPL planner integration and RUL-aware experiment</title>
+  <desc id="desc">Custom OMPL planner and objective classes are compiled and registered in MoveIt, then selected from a planner configuration. A runner feeds joint health to the RUL-aware planner, records planned path usage, and updates health for the next task.</desc>
+  <rect width="1200" height="450" rx="20" fill="#f5f8fc"/>
+  <text x="40" y="49" font-family="Arial,sans-serif" font-size="25" font-weight="bold" fill="#173451">1  Add your planner to OMPL and MoveIt</text>
   <g font-family="Arial,sans-serif" text-anchor="middle">
-    <rect x="35" y="92" width="245" height="105" rx="15" fill="#dcecf8" stroke="#7ca8c8"/>
-    <text x="157" y="132" font-size="18" font-weight="bold" fill="#163954">Joint health state</text>
-    <text x="157" y="160" font-size="15" fill="#31516a">RUL · degradation · weights</text>
-    <rect x="355" y="92" width="245" height="105" rx="15" fill="#d9efe8" stroke="#79b6a1"/>
-    <text x="477" y="132" font-size="18" font-weight="bold" fill="#174d3b">RULRRTstar</text>
-    <text x="477" y="160" font-size="15" fill="#315a4b">health-aware search</text>
-    <rect x="675" y="92" width="210" height="105" rx="15" fill="#e8e6f7" stroke="#aaa1ce"/>
-    <text x="780" y="132" font-size="18" font-weight="bold" fill="#40336d">UR5 paths</text>
-    <text x="780" y="160" font-size="15" fill="#5e5480">pickup · place</text>
-    <rect x="960" y="92" width="205" height="105" rx="15" fill="#fff0d8" stroke="#d9ad64"/>
-    <text x="1062" y="132" font-size="18" font-weight="bold" fill="#684516">Usage and loss</text>
-    <text x="1062" y="160" font-size="15" fill="#785d36">update joint RUL</text>
-    <text x="600" y="272" font-size="15" fill="#40546b">BaseRRTstar runs under the same three health scenarios for comparison · 54 stored runs</text>
+    <rect x="40" y="77" width="252" height="94" rx="13" fill="#e0eefa" stroke="#88b1d0"/>
+    <text x="166" y="113" font-size="18" font-weight="bold" fill="#173f60">Planner + objective</text>
+    <text x="166" y="141" font-size="14" fill="#375c78">OMPL C++ classes</text>
+    <rect x="340" y="77" width="252" height="94" rx="13" fill="#dfefe9" stroke="#84b8a6"/>
+    <text x="466" y="113" font-size="18" font-weight="bold" fill="#17523d">Build + register</text>
+    <text x="466" y="141" font-size="14" fill="#3a6556">moveit_ompl_interface</text>
+    <rect x="640" y="77" width="252" height="94" rx="13" fill="#eee8f8" stroke="#b1a0cd"/>
+    <text x="766" y="113" font-size="18" font-weight="bold" fill="#52376e">Planner ID + YAML</text>
+    <text x="766" y="141" font-size="14" fill="#705984">select in MoveIt</text>
+    <rect x="940" y="77" width="220" height="94" rx="13" fill="#fff0dc" stroke="#d7b77e"/>
+    <text x="1050" y="113" font-size="18" font-weight="bold" fill="#6f4c1b">Plan paths</text>
+    <text x="1050" y="141" font-size="14" fill="#80643c">robot task requests</text>
   </g>
-  <g stroke="#52708a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M280 144h62m-10-9 10 9-10 9M600 144h62m-10-9 10 9-10 9M885 144h62m-10-9 10 9-10 9"/>
-    <path d="M1062 197v31H157v-31"/>
+  <g stroke="#64809a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M292 124h33m-9-9 9 9-9 9M592 124h33m-9-9 9 9-9 9M892 124h33m-9-9 9 9-9 9"/>
   </g>
-  <text x="610" y="222" font-family="Arial,sans-serif" font-size="14" text-anchor="middle" fill="#52708a">feedback for next task</text>
+  <path d="M40 204h1120" stroke="#d4dfeb" stroke-width="2"/>
+  <text x="40" y="248" font-family="Arial,sans-serif" font-size="25" font-weight="bold" fill="#173451">2  Study the RUL-aware design</text>
+  <g font-family="Arial,sans-serif" text-anchor="middle">
+    <rect x="40" y="276" width="250" height="96" rx="13" fill="#e0eefa" stroke="#88b1d0"/>
+    <text x="165" y="312" font-size="18" font-weight="bold" fill="#173f60">Joint health</text>
+    <text x="165" y="339" font-size="14" fill="#375c78">RUL + degradation weights</text>
+    <rect x="340" y="276" width="250" height="96" rx="13" fill="#dfefe9" stroke="#84b8a6"/>
+    <text x="465" y="312" font-size="18" font-weight="bold" fill="#17523d">RULRRTstar</text>
+    <text x="465" y="339" font-size="14" fill="#3a6556">metric + edge objective</text>
+    <rect x="640" y="276" width="250" height="96" rx="13" fill="#eee8f8" stroke="#b1a0cd"/>
+    <text x="765" y="312" font-size="18" font-weight="bold" fill="#52376e">Planned paths</text>
+    <text x="765" y="339" font-size="14" fill="#705984">pickup + place</text>
+    <rect x="940" y="276" width="220" height="96" rx="13" fill="#fff0dc" stroke="#d7b77e"/>
+    <text x="1050" y="312" font-size="18" font-weight="bold" fill="#6f4c1b">Usage + RUL</text>
+    <text x="1050" y="339" font-size="14" fill="#80643c">update next task</text>
+    <text x="600" y="428" font-size="15" fill="#405c76">Compared with BaseRRTstar · 3 health scenarios × 3 shapes × 2 planners × 3 repetitions = 54 runs</text>
+  </g>
+  <g stroke="#64809a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M290 324h35m-9-9 9 9-9 9M590 324h35m-9-9 9 9-9 9M890 324h35m-9-9 9 9-9 9"/>
+    <path d="M1050 372v25H165v-25"/>
+  </g>
 </svg>

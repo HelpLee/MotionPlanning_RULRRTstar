@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this repository, please cite this software."
 type: software
-title: "RUL-aware RRT* for UR5 motion planning"
+title: "RUL-aware RRT*: a custom planner for OMPL and MoveIt"
 authors:
   - family-names: Li
     given-names: Haibo
