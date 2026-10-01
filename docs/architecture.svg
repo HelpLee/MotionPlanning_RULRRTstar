@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="310" viewBox="0 0 1200 310" role="img" aria-labelledby="title desc">
+  <title id="title">RUL-aware motion planning experiment flow</title>
+  <desc id="desc">Joint health parameters feed an RUL-aware RRT star planner, which plans UR5 paths. Joint usage updates the health state for the next task. A baseline planner supports comparison.</desc>
+  <rect width="1200" height="310" rx="18" fill="#f5f8fc"/>
+  <text x="40" y="47" font-family="Arial,sans-serif" font-size="23" font-weight="bold" fill="#14283f">RUL-aware motion planning loop</text>
+  <g font-family="Arial,sans-serif" text-anchor="middle">
+    <rect x="35" y="92" width="245" height="105" rx="15" fill="#dcecf8" stroke="#7ca8c8"/>
+    <text x="157" y="132" font-size="18" font-weight="bold" fill="#163954">Joint health state</text>
+    <text x="157" y="160" font-size="15" fill="#31516a">RUL · degradation · weights</text>
+    <rect x="355" y="92" width="245" height="105" rx="15" fill="#d9efe8" stroke="#79b6a1"/>
+    <text x="477" y="132" font-size="18" font-weight="bold" fill="#174d3b">RULRRTstar</text>
+    <text x="477" y="160" font-size="15" fill="#315a4b">health-aware search</text>
+    <rect x="675" y="92" width="210" height="105" rx="15" fill="#e8e6f7" stroke="#aaa1ce"/>
+    <text x="780" y="132" font-size="18" font-weight="bold" fill="#40336d">UR5 paths</text>
+    <text x="780" y="160" font-size="15" fill="#5e5480">pickup · place</text>
+    <rect x="960" y="92" width="205" height="105" rx="15" fill="#fff0d8" stroke="#d9ad64"/>
+    <text x="1062" y="132" font-size="18" font-weight="bold" fill="#684516">Usage and loss</text>
+    <text x="1062" y="160" font-size="15" fill="#785d36">update joint RUL</text>
+    <text x="600" y="272" font-size="15" fill="#40546b">BaseRRTstar runs under the same three health scenarios for comparison · 54 stored runs</text>
+  </g>
+  <g stroke="#52708a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M280 144h62m-10-9 10 9-10 9M600 144h62m-10-9 10 9-10 9M885 144h62m-10-9 10 9-10 9"/>
+    <path d="M1062 197v31H157v-31"/>
+  </g>
+  <text x="610" y="222" font-family="Arial,sans-serif" font-size="14" text-anchor="middle" fill="#52708a">feedback for next task</text>
+</svg>

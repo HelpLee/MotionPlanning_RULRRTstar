@@ -1,4 +1,53 @@
-# UR5 RUL-Aware RRT*: Custom OMPL Planner in MoveIt 1 / UR5 寿命感知 RRT*：在 MoveIt 1 中集成自定义 OMPL 规划器
+# RUL-aware RRT* for UR5 motion planning
+
+**Health-aware path planning in OMPL and MoveIt 1, with a reproducible 54-run UR5 comparison.**
+
+**UR5 寿命感知运动规划：OMPL / MoveIt 1 自定义规划器与 54 次实验数据。**
+
+[Quick start](#quick-start--快速开始) · [Results](#results--实验结果) · [Method](docs/03_源码与算法.md) · [Reproduce](docs/01_环境与规划器注册.md) · [Data](data/joint_usage_1/) · [Citation](#citation--引用)
+
+This repository packages `RULRRTstar`, a remaining-useful-life (RUL) aware RRT* planner, and `BaseRRTstar` for comparison. It includes the OMPL/MoveIt integration, UR5 configuration, experiment runner, and raw data for three health scenarios. The experiment plans pickup and place paths with fake execution; it does **not** execute them on a physical robot. / 本仓库提供寿命感知规划器、基线规划器、UR5 配置及三种健康场景的原始数据；实验仅规划路径，不驱动真实机器人。
+
+![RUL-aware planning loop](docs/architecture.svg)
+
+**Highlights / 要点**
+
+- Custom RUL-aware and baseline RRT* planners registered in MoveIt 1 / 两种自定义规划器接入 MoveIt 1。
+- Three health states × three degradation shapes × two planners × three repetitions = **54 runs** / 三种健康状态、三种退化形状、两种规划器、每组重复三次。
+- Packaged CSVs, verification scripts, and reproducible summary values / 附原始 CSV、校验脚本与可复核结果。
+
+## Results / 实验结果
+
+In the locally degraded scenario (LDS), the mean completed tasks before the stopping condition were: / 在局部退化场景中，达到停止条件前平均完成任务数为：
+
+| Degradation shape `p` | BaseRRTstar | RULRRTstar | Difference |
+| ---: | ---: | ---: | ---: |
+| 0.8 | 18.67 | 27.67 | +9.00 |
+| 1.0 | 33.00 | 51.67 | +18.67 |
+| 1.5 | 73.67 | 111.67 | +38.00 |
+
+Each value is the mean of three stored runs. FHS and HDS groups reached their 80-task cap, so their task counts do not distinguish the planners. These are results of this packaged simulation setup, not evidence of physical robot lifetime extension. See the [experiment guide](docs/02_实验运行与结果.md) for settings and interpretation. / 每项为三次运行均值；FHS 和 HDS 均达到 80 个任务上限。以上是仿真实验结果，并非实体机器人寿命验证。
+
+## Quick start / 快速开始
+
+To inspect the published data on a Python 3 machine: / 无需 ROS 即可核对包内数据：
+
+```bash
+git clone https://github.com/HelpLee/MotionPlanning_RULRRTstar.git
+cd MotionPlanning_RULRRTstar
+python3 tools/check_package.py
+python3 analysis/experiment_table.py --check-stored-summary
+```
+
+These two checks use the Python standard library. For the gamma trace check, install NumPy and run `python3 analysis/check_gamma_trace.py`. The full planning experiment requires **Ubuntu, ROS Melodic, MoveIt 1, OMPL 1.4.2, and a catkin workspace**; follow [environment and planner registration](docs/01_环境与规划器注册.md), then [run the experiments](docs/02_实验运行与结果.md). Third-party source revisions are in [`tools/source-revisions.json`](tools/source-revisions.json). / 前两项仅需 Python 标准库；完整规划实验需按教程配置 ROS 与 MoveIt。
+
+## Citation / 引用
+
+If you use this repository, cite the software using [`CITATION.cff`](CITATION.cff). A paper link and formal publication citation will be added when available. / 使用本仓库时请引用软件；论文正式信息将在公开后补充。
+
+## License / 许可
+
+No project-wide software license has been declared yet. The repository also references third-party ROS, MoveIt, and OMPL sources; inspect their licenses before reuse or redistribution. / 目前尚未声明覆盖整个仓库的软件许可；复用或再分发前请检查第三方组件的许可。
 
 **中文。**本仓库整理了 UR5 三场景寿命感知运动规划实验：规划器与优化目标的 C++ 源码、MoveIt 注册工具、UR5 配置、批量实验脚本，以及 54 次运行的数据。教程以实际代码路径为准，说明从环境搭建到结果分析的操作。
 
