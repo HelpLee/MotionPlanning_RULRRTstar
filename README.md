@@ -41,18 +41,6 @@ python3 analysis/experiment_table.py --check-stored-summary
 
 These two checks use the Python standard library. For the gamma trace check, install NumPy and run `python3 analysis/check_gamma_trace.py`. The full planning experiment requires **Ubuntu, ROS Melodic, MoveIt 1, OMPL 1.4.2, and a catkin workspace**; follow [environment and planner registration](docs/01_环境与规划器注册.md), then [run the experiments](docs/02_实验运行与结果.md). Third-party source revisions are in [`tools/source-revisions.json`](tools/source-revisions.json). / 前两项仅需 Python 标准库；完整规划实验需按教程配置 ROS 与 MoveIt。
 
-## Citation / 引用
-
-If you use this repository, cite the software using [`CITATION.cff`](CITATION.cff). A paper link and formal publication citation will be added when available. / 使用本仓库时请引用软件；论文正式信息将在公开后补充。
-
-## License / 许可
-
-No project-wide software license has been declared yet. The repository also references third-party ROS, MoveIt, and OMPL sources; inspect their licenses before reuse or redistribution. / 目前尚未声明覆盖整个仓库的软件许可；复用或再分发前请检查第三方组件的许可。
-
-**中文。**本仓库整理了 UR5 三场景寿命感知运动规划实验：规划器与优化目标的 C++ 源码、MoveIt 注册工具、UR5 配置、批量实验脚本，以及 54 次运行的数据。教程以实际代码路径为准，说明从环境搭建到结果分析的操作。
-
-**English.** This repository organizes a three-scenario UR5 experiment in lifetime-aware motion planning: C++ planners and objectives, MoveIt registration tooling, UR5 configuration, batch experiment code, and data from 54 runs. The guides follow the implemented code path from environment setup through result analysis.
-
 ## Start here / 阅读顺序
 
 | Guide / 教程 | Scope / 内容 |
@@ -102,3 +90,11 @@ The first command checks source hashes and dataset completeness; the second prod
 The planners implement OMPL APIs but also publish ROS topics. Their four `.cpp` files are therefore compiled into MoveIt 1's `moveit_ompl_interface`. `planning_context_manager.cpp` registers `geometric::RULRRTstar` and `geometric::BaseRRTstar`; `ompl_planning.yaml` exposes both IDs to the UR5 `manipulator` group. / 规划器遵循 OMPL 接口，同时发布 ROS 话题，因此源码编入 MoveIt 的 OMPL 接口库，由 MoveIt 注册规划器 ID，再在 UR5 的 YAML 中提供给 `manipulator` 规划组。
 
 The project targets the ROS Melodic / MoveIt 1 / OMPL 1.4.2 API generation. Third-party source commits are listed in `tools/source-revisions.json`. For API background, see the official [OMPL planner guide](https://ompl.kavrakilab.org/newPlanner.html) and [MoveIt OMPL configuration guide](https://moveit.github.io/moveit_tutorials/doc/ompl_interface/ompl_interface_tutorial.html). / 第三方源码版本已在清单中固定；上述官方文档可用于查阅接口约定。
+
+## Citation / 引用
+
+If you use this repository, cite the software using [`CITATION.cff`](CITATION.cff). A paper link and formal publication citation will be added when available. / 使用本仓库时请引用软件；论文正式信息将在公开后补充。
+
+## License / 许可
+
+No project-wide software license has been declared yet. The repository also references third-party ROS, MoveIt, and OMPL sources; inspect their licenses before reuse or redistribution. / 目前尚未声明覆盖整个仓库的软件许可；复用或再分发前请检查第三方组件的许可。
